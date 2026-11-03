@@ -1,0 +1,100 @@
+{
+  "info": {
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "API local de produtos. Execute listar/consultar para ver o produto já cadastrado. Cada POST cria outro cadastro com novo UUID.",
+    "name": "criativo-ia-api - Produto Lupo"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "produtoId",
+      "value": "c047e6a0-8a70-4f50-b7e0-101a989f8312"
+    },
+    {
+      "key": "imagemNome",
+      "value": "foto-01.png"
+    }
+  ],
+  "item": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/produtos"
+      },
+      "name": "1 - Listar produtos"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/produtos/{{produtoId}}"
+      },
+      "name": "2 - Consultar produto Lupo"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/produtos/{{produtoId}}/imagens/{{imagemNome}}"
+      },
+      "name": "3 - Ver primeira imagem"
+    },
+    {
+      "request": {
+        "body": {
+          "formdata": [
+            {
+              "type": "file",
+              "contentType": "application/json",
+              "src": "C:\\Users\\M597570\\Documents\\projetos\\criativos-ia\\exemplos\\produto-lupo.json",
+              "key": "produto"
+            },
+            {
+              "type": "file",
+              "contentType": "image/png",
+              "src": "C:\\Users\\M597570\\Documents\\projetos\\Vitrine_Criativa_Conteudo_Publicitario\\influencer-03\\1736229272479761896-coeca-lupo\\produto-01.png",
+              "key": "imagens"
+            },
+            {
+              "type": "file",
+              "contentType": "image/png",
+              "src": "C:\\Users\\M597570\\Documents\\projetos\\Vitrine_Criativa_Conteudo_Publicitario\\influencer-03\\1736229272479761896-coeca-lupo\\produto-02.png",
+              "key": "imagens"
+            },
+            {
+              "type": "file",
+              "contentType": "image/png",
+              "src": "C:\\Users\\M597570\\Documents\\projetos\\Vitrine_Criativa_Conteudo_Publicitario\\influencer-03\\1736229272479761896-coeca-lupo\\produto-03.png",
+              "key": "imagens"
+            }
+          ],
+          "mode": "formdata"
+        },
+        "method": "POST",
+        "url": "{{baseUrl}}/api/produtos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Cadastro retorna 201\", function () { pm.response.to.have.status(201); });",
+              "if (pm.response.code === 201) { const p = pm.response.json(); pm.collectionVariables.set(\"produtoId\", p.id); pm.collectionVariables.set(\"imagemNome\", p.imagens[0]); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "name": "4 - Cadastrar produto Lupo (cria novo cadastro)"
+    },
+    {
+      "name": "5 - Testar conexão Claude (texto)",
+      "request": {
+        "description": "Sem body. Requer ANTHROPIC_API_KEY no servidor e reinício com o novo JAR. Envia texto fixo e consome tokens; não envia fotos nem gera dossiê.",
+        "method": "POST",
+        "url": "{{baseUrl}}/api/ia/claude/testar"
+      }
+    }
+  ]
+}
