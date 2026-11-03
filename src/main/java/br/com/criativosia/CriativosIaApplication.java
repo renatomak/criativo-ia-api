@@ -5,5 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class CriativosIaApplication {
-    public static void main(String[] args) { SpringApplication.run(CriativosIaApplication.class, args); }
+  public static void main(String[] args) {
+    SpringApplication.run(CriativosIaApplication.class, args);
+  }
 }
