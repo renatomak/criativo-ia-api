@@ -95,3 +95,11 @@ A recuperação exige UUID, nome gerado permitido e pertencimento à lista do pr
 `mvn test` executa testes JUnit para API, campos inválidos, imagens falsas/truncadas/vazias, formatos não permitidos, JPEG/PNG/WebP, limites, nova instância de armazenamento, bytes originais, pastas interrompidas, falha de publicação e acesso indevido. O teste de links simbólicos é ignorado quando o Windows não concede o privilégio necessário. Veja `VALIDACAO.md` para resultados da entrega.
 
 Para backup, pare o servidor e copie toda a pasta `dados`. Não há edição ou exclusão nesta etapa.
+
+## Logs das chamadas
+
+Todas as requisições síncronas passam pelo filtro global de logs. A entrada mostra método, rota e Content-Length (`-1` quando não informado). A saída mostra status HTTP e duração em milissegundos. Erros 4xx usam WARN e 5xx usam ERROR.
+
+Cada chamada recebe um UUID gerado pelo servidor, enviado no header `X-Request-ID` e disponível no MDC como `requestId`. A integração Claude registra ENVIO e RETORNO com o mesmo ID, duração, resultado e consumo de tokens quando há sucesso.
+
+Os logs aparecem no console do IntelliJ ou terminal. Não há cópia de corpos, imagens ou uploads para registrar logs; os streams continuam sendo processados normalmente. Headers, query strings, prompts, respostas e credenciais não são incluídos nesses eventos. O filtro cobre o processamento síncrono utilizado atualmente; endpoints assíncronos futuros precisam de tratamento de conclusão assíncrona.

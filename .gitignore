@@ -1,3 +1,5 @@
 /target/
 /dados/
 *.log
+/gateway.local.json
+/gateway.local.properties

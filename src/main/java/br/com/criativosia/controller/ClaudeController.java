@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/ia/claude")
+@RequestMapping({"/api/integracoes/claude", "/api/ia/claude"})
 public class ClaudeController {
   private final ClaudeClient client;
 

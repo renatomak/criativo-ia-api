@@ -5,7 +5,7 @@
 - SDK oficial Anthropic Java 3.4.0; endpoint `POST /api/ia/claude/testar`.
 - `mvn verify`: 20 testes, 0 falhas, 0 erros, 1 ignorado (privilégio de links simbólicos da Parte 1).
 - Onze casos novos com SDK e HTTP local simulado: texto, consumo, autenticação, sanitização de erros, timeout, resposta incompleta e endpoint sem chave.
-- Chamada real pendente: `ANTHROPIC_API_KEY` ausente no ambiente. Nenhum produto ou foto enviado à Anthropic nesta validação.
+- Chamada real pendente: `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` ausentes no ambiente. Nenhum produto ou foto enviado à Anthropic nesta validação.
 - As etapas 2.2 a 2.4 não foram implementadas nesta entrega, conforme sequência do plano.
 
 ## Parte 1
@@ -22,3 +22,8 @@
 O teste de reinício usou três envios de uma pequena imagem PNG. A suíte JUnit cobre separadamente JPEG e WebP. O teste HTTP foi executado na porta 18080 com dados isolados; a configuração entregue usa 8080 e não contém os produtos de teste.
 
 Documentação de compatibilidade do Spring Boot: [requisitos oficiais](https://docs.spring.io/spring-boot/3.5/system-requirements.html).
+
+## Correção de autenticação do gateway
+
+Configuração separada de API key e auth token, conflito explícito entre credenciais e teste HTTP do token Bearer no endpoint configurado. mvn verify aprovado: 21 testes, 0 falhas, 1 ignorado; Checkstyle, Spotless e cobertura aprovados. Teste real do gateway não executado: inicialização com credencial local bloqueada pela revisão automática de execução.
+

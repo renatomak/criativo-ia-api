@@ -12,22 +12,32 @@ import org.springframework.context.annotation.Configuration;
 public class ClaudeConfig {
   @Bean
   public ClaudeConnection claudeConnection(
-      @Value("${ANTHROPIC_API_KEY:}") String key,
+      @Value("${ANTHROPIC_API_KEY:}") String apiKey,
+      @Value("${ANTHROPIC_AUTH_TOKEN:}") String authToken,
+      @Value("${ANTHROPIC_BASE_URL:}") String baseUrl,
       @Value("${claude.model}") String model,
       @Value("${claude.timeout-seconds}") int timeoutSeconds) {
     if (model.isBlank() || timeoutSeconds < 1 || timeoutSeconds > 120)
       throw new IllegalArgumentException(
           "Configure modelo e timeout Claude entre 1 e 120 segundos");
-    // Não lê base URLs externas nem registra credenciais. Sem chave, a Parte 1 continua disponível.
+    if (!apiKey.isBlank() && !authToken.isBlank())
+      throw new IllegalArgumentException(
+          "Configure somente ANTHROPIC_API_KEY ou ANTHROPIC_AUTH_TOKEN, nunca ambos.");
     AnthropicClient client =
-        key.isBlank()
+        apiKey.isBlank() && authToken.isBlank()
             ? null
-            : AnthropicOkHttpClient.builder()
-                .apiKey(key.trim())
-                .timeout(Duration.ofSeconds(timeoutSeconds))
-                .maxRetries(0)
-                .build();
+            : buildClient(apiKey.trim(), authToken.trim(), baseUrl.trim(), timeoutSeconds);
     return new ClaudeConnection(client, model);
+  }
+
+  private static AnthropicClient buildClient(
+      String apiKey, String authToken, String baseUrl, int timeoutSeconds) {
+    var builder =
+        AnthropicOkHttpClient.builder().timeout(Duration.ofSeconds(timeoutSeconds)).maxRetries(0);
+    if (!authToken.isBlank()) builder.authToken(authToken);
+    else builder.apiKey(apiKey);
+    if (!baseUrl.isBlank()) builder.baseUrl(baseUrl);
+    return builder.build();
   }
 
   public static final class ClaudeConnection implements AutoCloseable {

@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class ClaudeClient {
+  private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ClaudeClient.class);
   private final ClaudeConnection connection;
 
   public ClaudeClient(ClaudeConnection connection) {
@@ -21,6 +22,56 @@ public class ClaudeClient {
   }
 
   public TesteResponse testarConexao() {
+    return enviar(
+        MessageCreateParams.builder()
+            .model(connection.model())
+            .maxTokens(64)
+            .thinking(com.anthropic.models.messages.ThinkingConfigDisabled.builder().build())
+            .addUserMessage("Responda apenas: Conexão com Claude funcionando.")
+            .build(),
+        "testeConexao");
+  }
+
+  public TesteResponse analisar(
+      java.util.List<com.anthropic.models.messages.ContentBlockParam> content, String prompt) {
+    return enviar(
+        MessageCreateParams.builder()
+            .model(connection.model())
+            .maxTokens(2048)
+            .thinking(com.anthropic.models.messages.ThinkingConfigDisabled.builder().build())
+            .system(prompt)
+            .addUserMessageOfContentBlockParams(content)
+            .build(),
+        "analiseProduto");
+  }
+
+  private TesteResponse enviar(MessageCreateParams params, String operacao) {
+    long start = System.nanoTime();
+    String id = org.slf4j.MDC.get("requestId");
+    if (id == null) id = java.util.UUID.randomUUID().toString();
+    LOG.info("CLAUDE ENVIO | id={} | operacao={}", id, operacao);
+    try {
+      TesteResponse result = executar(params);
+      LOG.info(
+          "CLAUDE RETORNO | id={} | resultado=SUCESSO | duracaoMs={} | tokensEntrada={} | tokensSaida={}",
+          id,
+          java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start),
+          result.tokensEntrada(),
+          result.tokensSaida());
+      return result;
+    } catch (RuntimeException ex) {
+      int status =
+          ex instanceof ResponseStatusException response ? response.getStatusCode().value() : 500;
+      LOG.warn(
+          "CLAUDE RETORNO | id={} | resultado=ERRO | statusLocal={} | duracaoMs={}",
+          id,
+          status,
+          java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+      throw ex;
+    }
+  }
+
+  private TesteResponse executar(MessageCreateParams params) {
     var client =
         connection
             .client()
@@ -28,17 +79,9 @@ public class ClaudeClient {
                 () ->
                     error(
                         HttpStatus.SERVICE_UNAVAILABLE,
-                        "Configure ANTHROPIC_API_KEY no ambiente do servidor e reinicie a aplicação."));
+                        "Configure ANTHROPIC_API_KEY ou ANTHROPIC_AUTH_TOKEN no ambiente do servidor e reinicie a aplicação."));
     try {
-      var message =
-          client
-              .messages()
-              .create(
-                  MessageCreateParams.builder()
-                      .model(connection.model())
-                      .maxTokens(64)
-                      .addUserMessage("Responda apenas: Conexão com Claude funcionando.")
-                      .build());
+      var message = client.messages().create(params);
       String text =
           message.content().stream()
               .flatMap(block -> block.text().stream())
@@ -48,6 +91,7 @@ public class ClaudeClient {
           || message.stopReason().map(reason -> !reason.toString().equals("end_turn")).orElse(true))
         throw error(HttpStatus.BAD_GATEWAY, "Claude retornou resposta vazia ou incompleta.");
       return new TesteResponse(
+          "OK",
           message.id(),
           message.model().toString(),
           text,
@@ -66,7 +110,9 @@ public class ClaudeClient {
                 HttpStatus.BAD_GATEWAY,
                 "Anthropic recusou a solicitação. Verifique créditos, modelo e configuração da conta.");
         case 404 ->
-            throw error(HttpStatus.BAD_GATEWAY, "Modelo Claude indisponível. Revise CLAUDE_MODEL.");
+            throw error(
+                HttpStatus.BAD_GATEWAY,
+                "O provedor retornou HTTP 404. Verifique ANTHROPIC_BASE_URL e se o modelo em claude.model está disponível na sua conta.");
         case 429 ->
             throw error(
                 HttpStatus.SERVICE_UNAVAILABLE,
@@ -95,6 +141,7 @@ public class ClaudeClient {
   }
 
   public record TesteResponse(
+      String status,
       String mensagemId,
       String modelo,
       String resposta,

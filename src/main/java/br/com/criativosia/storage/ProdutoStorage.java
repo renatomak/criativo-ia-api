@@ -92,12 +92,20 @@ public class ProdutoStorage {
   }
 
   public byte[] imagem(UUID id, String nome) throws IOException {
+    return imagem(id, nome, 10 * 1024 * 1024);
+  }
+
+  public byte[] imagem(UUID id, String nome, int limite) throws IOException {
     if (!nomeValido(nome)) throw ausente();
     Produto produto = buscar(id);
     if (!produto.imagens().contains(nome)) throw ausente();
     Path path = seguro(root.resolve(id.toString()).resolve("imagens").resolve(nome));
     try (var in = Files.newInputStream(path, LinkOption.NOFOLLOW_LINKS)) {
-      return in.readAllBytes();
+      byte[] bytes = in.readNBytes(limite + 1);
+      if (bytes.length > limite)
+        throw new ResponseStatusException(
+            HttpStatus.PAYLOAD_TOO_LARGE, "Imagem excede o limite para esta operação");
+      return bytes;
     }
   }
 

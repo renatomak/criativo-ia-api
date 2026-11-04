@@ -93,8 +93,16 @@
       "request": {
         "description": "Sem body. Requer ANTHROPIC_API_KEY no servidor e reinício com o novo JAR. Envia texto fixo e consome tokens; não envia fotos nem gera dossiê.",
         "method": "POST",
-        "url": "{{baseUrl}}/api/ia/claude/testar"
+        "url": "{{baseUrl}}/api/integracoes/claude/testar"
       }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/produtos/{{produtoId}}/analisar",
+        "description": "Sem body. Envia descrição, observações e fotos locais ao gateway configurado. Consome tokens. Retorna análise preliminar sem salvar histórico."
+      },
+      "name": "6 - Analisar produto com fotos"
     }
   ]
 }
