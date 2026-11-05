@@ -1,5 +1,5 @@
 param(
-    [string]$Modelo = 'claude-haiku-5-5',
+    [string]$Modelo = 'claude-sonnet-4-6',
     [string]$Java = 'java'
 )
 $ErrorActionPreference = 'Stop'

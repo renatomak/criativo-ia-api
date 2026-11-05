@@ -219,6 +219,8 @@ class ClaudeClientTest {
             3000);
     var ex = assertThrows(ResponseStatusException.class, client::testarConexao);
     assertEquals(expectedStatus, ex.getStatusCode().value());
+    if (providerStatus == 401 || providerStatus == 403)
+      assertTrue(ex.getReason().contains("HTTP " + providerStatus));
     assertFalse(ex.getReason().contains("secret-test-only"));
     assertNull(ex.getCause());
   }

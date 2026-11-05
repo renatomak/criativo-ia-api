@@ -49,7 +49,11 @@ public class ClaudeClient {
     long start = System.nanoTime();
     String id = org.slf4j.MDC.get("requestId");
     if (id == null) id = java.util.UUID.randomUUID().toString();
-    LOG.info("CLAUDE ENVIO | id={} | operacao={}", id, operacao);
+    LOG.info(
+        "CLAUDE ENVIO | id={} | operacao={} | modelo={}",
+        id,
+        operacao,
+        connection.model().replaceAll("[^a-zA-Z0-9._:-]", "_"));
     try {
       TesteResponse result = executar(params);
       LOG.info(
@@ -99,12 +103,20 @@ public class ClaudeClient {
           message.usage().outputTokens(),
           OffsetDateTime.now());
     } catch (AnthropicServiceException ex) {
+      LOG.warn(
+          "CLAUDE PROVEDOR | id={} | statusProvedor={}",
+          org.slf4j.MDC.get("requestId"),
+          ex.statusCode());
       // Não propagar corpo, headers ou mensagem do provedor, que podem conter dados sensíveis.
       switch (ex.statusCode()) {
-        case 401, 403 ->
+        case 401 ->
             throw error(
                 HttpStatus.BAD_GATEWAY,
-                "Autenticação ou permissão recusada pela Anthropic. Revise a chave no servidor.");
+                "O gateway retornou HTTP 401: credencial recusada. Confira o token e ANTHROPIC_BASE_URL; verifique se o token foi revogado ou expirou.");
+        case 403 ->
+            throw error(
+                HttpStatus.BAD_GATEWAY,
+                "O gateway retornou HTTP 403: acesso negado. Verifique no provedor as permissões do token, grupo e modelo configurado em claude.model.");
         case 400, 402 ->
             throw error(
                 HttpStatus.BAD_GATEWAY,

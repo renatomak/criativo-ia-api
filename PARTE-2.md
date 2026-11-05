@@ -95,3 +95,9 @@ Limites locais conservadores para esta etapa: até 10 fotos, 3 MiB de bytes por 
 Os logs globais incluem a chamada e o consumo, sem conteúdo ou Base64. A análise usa o mesmo modelo e timeout configurados no application.properties. Um 504 pode exigir aumentar claude.timeout-seconds (máximo 120). A etapa foi validada com HTTP simulado; interpretação real das fotos pelo gateway ainda requer teste no Postman.
 
 Referência de formatos e limites da API: https://platform.claude.com/docs/en/build-with-claude/vision
+
+## Diagnóstico de autenticação — 05/11/2026
+
+Restaurado `claude-sonnet-4-6`, modelo anteriormente validado pelo usuário na MWAPI. O token e a URL configurados foram preservados. A disponibilidade do Haiku 5.5 no gateway não foi confirmada.
+
+O log CLAUDE ENVIO agora mostra o modelo; CLAUDE PROVEDOR mostra o status HTTP original sem corpo ou credenciais. O JSON diferencia HTTP 401 (credencial recusada) de HTTP 403 (acesso negado: verificar permissões, grupo e modelo). Ambos continuam retornando 502 na API local porque são falhas do provedor externo. Reinicie a aplicação e repita o teste; esta alteração não comprova a validade atual do token.
